@@ -17,8 +17,7 @@ mongoose
     console.error;
   });
 
-let tasks = [];
-
+// DataBase collection Schema
 const taskSchema = new mongoose.Schema({
   title: {
     required: true,
@@ -29,7 +28,7 @@ const taskSchema = new mongoose.Schema({
 
 const taskModel = mongoose.model("Task", taskSchema);
 
-// Create a Task item route
+// Create a new task item route
 app.post("/tasks", async (req, res) => {
   const { title, description } = req.body;
   try {
@@ -48,6 +47,42 @@ app.get("/tasks", async (req, res) => {
     const tasks = await taskModel.find();
     res.status(200).json(tasks);
   } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
+
+// Update a task item
+app.put("/tasks/:id", async (req, res) => {
+  try {
+    const { title, description } = req.body;
+    const id = req.params.id;
+    const updateTask = await taskModel.findByIdAndUpdate(
+      id,
+      {
+        title,
+        description,
+      },
+      { new: true }
+    );
+
+    if (!updateTask) {
+      return res.status(404).json({ message: "Task not found" });
+    }
+    res.json(updateTask);
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({ message: error.message });
+  }
+});
+
+// Delete a task item
+app.delete("/tasks/:id", async (req, res) => {
+  try {
+    const id = req.params.id;
+    await taskModel.findByIdAndDelete(id);
+    res.status(204).end();
+  } catch (error) {
+    console.log(error);
     res.status(500).json({ message: error.message });
   }
 });
